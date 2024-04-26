@@ -1,0 +1,28 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+
+entity Mont_instancias is
+Generic(nc : STD_LOGIC_VECTOR(4 downto 0):="10111";
+pot : STD_LOGIC_VECTOR(22 downto 0):="00000001011111111111001";
+uno: STD_LOGIC_VECTOR(22 downto 0):= "00000000000000000000001");
+
+    Port ( OA : in  STD_LOGIC_VECTOR (to_integer(unsigned(nc)-1) downto 0);
+           OB : in  STD_LOGIC_VECTOR (to_integer(unsigned(nc)-1) downto 0);
+           RES : out  STD_LOGIC_VECTOR (to_integer(unsigned(nc)-1) downto 0));
+end Mont_instancias;
+
+architecture Behavioral of Mont_instancias is
+signal R1: STD_LOGIC_VECTOR(to_integer(unsigned(nc)-1) downto 0);
+signal R2: STD_LOGIC_VECTOR(to_integer(unsigned(nc)-1) downto 0);
+signal R3: STD_LOGIC_VECTOR(to_integer(unsigned(nc)-1) downto 0);
+component Mont1
+Port (A, B: in STD_LOGIC_VECTOR(to_integer(unsigned(nc)-1) downto 0); C: out STD_LOGIC_VECTOR(to_integer(unsigned(nc)-1) downto 0)); 
+end component;
+begin
+M1 : component Mont1 port map(OA,pot,R1);
+M2 : component Mont1 port map(OB,pot,R2);
+M3: component Mont1 port map(R1,R2,R3);
+M4: component Mont1 port map(R3,uno,RES); 
+end Behavioral;
