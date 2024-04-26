@@ -1,0 +1,69 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+library work;
+use work.prueba.all;
+
+entity separador is
+    Port ( coefs_in : in  entradas;
+           coefs_out : out  salidas);
+end separador;
+
+architecture Behavioral of separador is
+    type nivel_1 is array (0 to 1, 0 to 7) of std_logic_vector(22 downto 0);
+	 type nivel_2 is array (0 to 3, 0 to 3) of std_logic_vector(22 downto 0);
+    type nivel_3 is array (0 to 7, 0 to 1) of std_logic_vector(22 downto 0);
+	     -- Declaración de las señales de los arrays
+--	 signal lv01: nivel_0;
+    signal lv1: nivel_1;
+    signal lv2: nivel_2;
+    signal lv3: nivel_3;
+begin
+process(coefs_in)
+begin
+for i in 0 to 15 loop
+	if i mod 2=0 then
+		lv1(0,i/2)<=coefs_in(i);
+	else
+		lv1(1,i/2)<=coefs_in(i);
+	end if;
+end loop;
+end process;
+
+process(lv1)
+begin
+for i in 0 to 7 loop
+	for j in 0 to 1 loop
+		if i mod 2=0 then
+			lv2(2*j,i/2)<=lv1(j,i);
+		elsif i mod 2=1 then
+			lv2(2*j+1,i/2)<=lv1(j,i);
+		end if;
+	end loop;
+end loop;
+end process;
+
+process(lv2)
+begin
+for i in 0 to 3 loop
+	for j in 0 to 3 loop
+		if i mod 2=0 then
+			lv3(2*j,i/2)<=lv2(j,i);
+		else
+			lv3(2*j+1,i/2)<=lv2(j,i);
+		end if;
+	end loop;
+end loop;
+end process;
+
+process(lv3)
+begin
+for i in 0 to 1 loop
+	for j in 0 to 7 loop
+		coefs_out(i+2*j)<=lv3(j,i);
+	end loop;
+end loop;
+end process;
+
+
+end Behavioral;
