@@ -1,0 +1,58 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+use IEEE.NUMERIC_STD.ALL;
+
+
+entity GS_Barrett is
+	 Generic(P : STD_LOGIC_VECTOR (22 downto 0):= "11111111110000000000001");
+
+    Port ( I1 : in  STD_LOGIC_VECTOR (22 downto 0);
+           I2 : in  STD_LOGIC_VECTOR (22 downto 0);
+			  TW : in  STD_LOGIC_VECTOR (22 downto 0);
+           O1 : out  STD_LOGIC_VECTOR (22 downto 0);
+           O2 : out  STD_LOGIC_VECTOR (22 downto 0));
+end GS_Barrett;
+
+architecture Behavioral of GS_Barrett is
+component barrett_1
+Port (A, B: in STD_LOGIC_VECTOR(22 downto 0); C: out STD_LOGIC_VECTOR(22 downto 0)); 
+end component;
+
+component reduc_barrett
+Port (A: in STD_LOGIC_VECTOR(23 downto 0); B: out STD_LOGIC_VECTOR(22 downto 0)); 
+end component;
+
+component sumador_2
+Port (in1, in2: in STD_LOGIC_VECTOR(22 downto 0); suma: out STD_LOGIC_VECTOR(23 downto 0)); 
+end component;
+
+component restador_2
+Port (in1, in2: in STD_LOGIC_VECTOR(22 downto 0); resta: out STD_LOGIC_VECTOR(22 downto 0)); 
+end component;
+
+signal O11: STD_LOGIC_VECTOR(23 downto 0);
+signal aux1: STD_LOGIC_VECTOR(22 downto 0);
+signal aux2: STD_LOGIC_VECTOR(22 downto 0);
+signal aux: STD_LOGIC_VECTOR(22 downto 0);
+signal aux3: STD_LOGIC_VECTOR(22 downto 0);
+
+begin
+S1: component sumador_2 port map(I1,I2,O11);
+RB: component reduc_barrett port map (O11,O1);
+R1: component restador_2 port map (I1,I2,aux1);
+R2: component restador_2 port map (I2,I1,aux2);
+R3: component restador_2 port map (P,aux2,aux3);
+
+process (I1,I2,aux1,aux3)
+begin
+if unsigned(I1) >= unsigned(I2) then
+aux<=aux1;
+else 
+aux<=aux3;
+end if;
+end process;
+B1 : component barrett_1 port map(aux,TW,O2);
+
+
+end Behavioral;
