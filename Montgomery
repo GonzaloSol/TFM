@@ -1,0 +1,55 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+entity Mont1 is
+Generic(n : STD_LOGIC_VECTOR(4 downto 0):="10111";
+P : STD_LOGIC_VECTOR (22 downto 0):= "11111111110000000000001";
+R : STD_LOGIC_VECTOR (22 downto 0):= "11111111101111111111111");
+    Port ( 
+           A : in  STD_LOGIC_VECTOR (22 downto 0);
+           B : in  STD_LOGIC_VECTOR (22 downto 0);
+           C : out  STD_LOGIC_VECTOR (22 downto 0));
+end Mont1;
+
+architecture Behavioral of Mont1 is
+signal C_1: STD_LOGIC_VECTOR(45 downto 0);
+signal CR: STD_LOGIC_VECTOR(68 downto 0);
+signal CR_2: STD_LOGIC_VECTOR(22 downto 0);
+signal CR_3: STD_LOGIC_VECTOR(45 downto 0);
+signal CR_3s:STD_LOGIC_VECTOR(46 downto 0);
+signal CR_4: STD_LOGIC_VECTOR(46 downto 0);
+signal C_def: STD_LOGIC_VECTOR(23 downto 0);
+signal C_aux: STD_LOGIC_VECTOR(23 downto 0);
+signal P_2: STD_LOGIC_VECTOR(23 downto 0);
+signal C_res: STD_LOGIC_VECTOR(23 downto 0);
+
+
+component sumador
+Port (in1, in2: in STD_LOGIC_VECTOR(45 downto 0); suma: out STD_LOGIC_VECTOR(46 downto 0)); 
+end component; 
+component restador
+Port (in1, in2: in STD_LOGIC_VECTOR(23 downto 0); resta: out STD_LOGIC_VECTOR(23 downto 0)); 
+end component; 
+
+begin
+C_1<=STD_LOGIC_VECTOR(unsigned(A)*unsigned(B));
+CR<=STD_LOGIC_VECTOR(unsigned(C_1)*unsigned(R));
+CR_2<=CR (to_integer(unsigned(n)-1) downto 0);
+CR_3<=STD_LOGIC_VECTOR(unsigned(CR_2)*unsigned(P));
+S1: component sumador port map(CR_3,C_1,CR_3s);
+CR_4 <= std_logic_vector(shift_right(unsigned(CR_3s), to_integer(unsigned(n))));
+C_def<=CR_4(to_integer(unsigned(n)) downto 0);
+P_2<='0' & P;
+S2: component restador port map (C_def,P_2,C_aux);
+process (C_def,C_aux)
+begin
+if unsigned(C_def) >= unsigned(P) then
+C_res <= C_aux;
+else 
+C_res <=C_def;
+end if;
+end process;
+C<=C_res (22 downto 0);
+
+end Behavioral;
