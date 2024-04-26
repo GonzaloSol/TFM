@@ -1,0 +1,49 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+
+entity Mersenne_1 is
+Generic(n : STD_LOGIC_VECTOR(4 downto 0):="10111";
+P : STD_LOGIC_VECTOR (22 downto 0):= "11111111111111111111111");
+    Port ( A : in  STD_LOGIC_VECTOR (22 downto 0);
+           B : in  STD_LOGIC_VECTOR (22 downto 0);
+           C : out  STD_LOGIC_VECTOR (22 downto 0));
+end Mersenne_1;
+
+architecture Behavioral of Mersenne_1 is
+signal C_1: STD_LOGIC_VECTOR(45 downto 0);
+signal C_2: STD_LOGIC_VECTOR(22 downto 0);
+signal C_3: STD_LOGIC_VECTOR(45 downto 0);
+signal C_33: STD_LOGIC_VECTOR(22 downto 0);
+signal C_4: STD_LOGIC_VECTOR(23 downto 0);
+signal C_44: STD_LOGIC_VECTOR(23 downto 0);
+signal C_5: STD_LOGIC_VECTOR(23 downto 0);
+signal P_2: STD_LOGIC_VECTOR(23 downto 0);
+component sumador
+Port (in1, in2: in STD_LOGIC_VECTOR(22 downto 0); suma: out STD_LOGIC_VECTOR(23 downto 0)); 
+end component; 
+component restador
+Port (in1, in2: in STD_LOGIC_VECTOR(23 downto 0); resta: out STD_LOGIC_VECTOR(23 downto 0)); 
+end component; 
+
+begin
+C_1<=STD_LOGIC_VECTOR(unsigned(A)*unsigned(B));
+C_2<=C_1 (22 downto 0);
+C_3 <= std_logic_vector(shift_right(unsigned(C_1), to_integer(unsigned(n))));
+C_33<=C_3 (22 downto 0);
+S1 : component sumador port map(C_2,C_33,C_4);
+P_2<='0' & P;
+S2: component restador port map(C_4,P_2,C_44);
+process (C_4, P_2)
+begin
+if unsigned(C_4) >= unsigned(P) then
+C_5<=C_44;
+else 
+C_5<=C_4;
+end if;
+end process;
+C<=C_5 (22 downto 0);
+
+
+end Behavioral;
