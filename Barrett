@@ -1,0 +1,63 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+
+
+
+entity barrett_1 is
+Generic(n : STD_LOGIC_VECTOR(4 downto 0):="10111";
+P : STD_LOGIC_VECTOR (22 downto 0):= "11111111110000000000001";
+R : STD_LOGIC_VECTOR (23 downto 0):= "100000000010000000000111");
+    Port ( A : in  STD_LOGIC_VECTOR (22 downto 0);
+           B : in  STD_LOGIC_VECTOR (22 downto 0);
+           C : out  STD_LOGIC_VECTOR (22 downto 0));
+end barrett_1;
+
+architecture Behavioral of barrett_1 is
+signal C_1: STD_LOGIC_VECTOR(45 downto 0);
+signal C_11: STD_LOGIC_VECTOR(46 downto 0);
+signal C_2: STD_LOGIC_VECTOR(45 downto 0);
+signal C_22: STD_LOGIC_VECTOR(23 downto 0);
+signal C_3: STD_LOGIC_VECTOR(47 downto 0);
+signal C_4: STD_LOGIC_VECTOR(47 downto 0);
+signal C_44: STD_LOGIC_VECTOR(23 downto 0);
+signal C_5: STD_LOGIC_VECTOR(46 downto 0);
+signal C_6: STD_LOGIC_VECTOR(46 downto 0);
+signal C_7: STD_LOGIC_VECTOR(46 downto 0);
+signal C_71: STD_LOGIC_VECTOR(46 downto 0);
+signal C_72: STD_LOGIC_VECTOR(46 downto 0);
+signal P_2: STD_LOGIC_VECTOR(46 downto 0);
+signal P_3: STD_LOGIC_VECTOR(46 downto 0);
+
+component restador_barr
+Port (in1, in2: in STD_LOGIC_VECTOR(46 downto 0); resta: out STD_LOGIC_VECTOR(46 downto 0)); 
+end component; 
+begin
+C_1<=STD_LOGIC_VECTOR(unsigned(A)*unsigned(B));
+C_11<='0' & C_1;
+C_2 <= std_logic_vector(shift_right(unsigned(C_1), to_integer(unsigned(n)-1)));
+C_22<=C_2 (23 downto 0);
+C_3<=STD_LOGIC_VECTOR(unsigned(C_22)*unsigned(R));
+C_4<=std_logic_vector(shift_right(unsigned(C_3), to_integer(unsigned(n)+1)));
+C_44<=C_4 (23 downto 0);
+C_5<=STD_LOGIC_VECTOR(unsigned(C_44)*unsigned(P));
+R1: component restador_barr port map(C_11,C_5,C_6);
+P_2(46) <= '0'; -- Llenar los bits adicionales con ceros
+P_2(45 downto 0) <= STD_LOGIC_VECTOR(2*unsigned(P)); -- Mantener los bits originales
+R2: component restador_barr port map(C_6,P_2,C_71);
+P_3(46 downto 23) <= (others => '0'); -- Llenar los bits adicionales con ceros
+P_3(22 downto 0) <= P; -- Mantener los bits originales
+R3: component restador_barr port map(C_6,P_3,C_72);
+process (C_6,C_71,C_72)
+begin
+if unsigned(C_6) >= 2*unsigned(P) then
+C_7<=C_71;
+elsif unsigned(C_6) >= unsigned(P) then
+C_7<=C_72;
+else 
+C_7<=C_6;
+end if;
+end process;
+C<=C_7 (22 downto 0);
+
+end Behavioral;
