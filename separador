@@ -1,0 +1,130 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+library work;
+use work.prueba_comp.all;
+
+entity separadorcomp is
+    Port ( coefs_incomp : in  entradas_comp;
+           coefs_outcomp : out  entradas_comp);
+end separadorcomp;
+
+architecture Behavioral of separadorcomp is
+    type nivel_1 is array (0 to 1, 0 to 127) of std_logic_vector(22 downto 0);
+	 type nivel_2 is array (0 to 3, 0 to 63) of std_logic_vector(22 downto 0);
+    type nivel_3 is array (0 to 7, 0 to 31) of std_logic_vector(22 downto 0);
+	 type nivel_4 is array (0 to 15, 0 to 15) of std_logic_vector(22 downto 0);
+	 type nivel_5 is array (0 to 31, 0 to 7) of std_logic_vector(22 downto 0);
+	 type nivel_6 is array (0 to 63, 0 to 3) of std_logic_vector(22 downto 0);
+	 type nivel_7 is array (0 to 127, 0 to 1) of std_logic_vector(22 downto 0);
+	     -- Declaración de las señales de los arrays
+--	 signal lv01: nivel_0;
+    signal lv1: nivel_1;
+    signal lv2: nivel_2;
+    signal lv3: nivel_3;
+	 signal lv4: nivel_4;
+	 signal lv5: nivel_5;
+	 signal lv6: nivel_6;
+	 signal lv7: nivel_7;
+begin
+process(coefs_incomp)
+begin
+for i in 0 to 255 loop
+	if i mod 2=0 then
+		lv1(0,i/2)<=coefs_incomp(i);
+	else
+		lv1(1,i/2)<=coefs_incomp(i);
+	end if;
+end loop;
+end process;
+
+process(lv1)
+begin
+for i in 0 to 127 loop
+	for j in 0 to 1 loop
+		if i mod 2=0 then
+			lv2(2*j,i/2)<=lv1(j,i);
+		elsif i mod 2=1 then
+			lv2(2*j+1,i/2)<=lv1(j,i);
+		end if;
+	end loop;
+end loop;
+end process;
+
+process(lv2)
+begin
+for i in 0 to 63 loop
+	for j in 0 to 3 loop
+		if i mod 2=0 then
+			lv3(2*j,i/2)<=lv2(j,i);
+		else
+			lv3(2*j+1,i/2)<=lv2(j,i);
+		end if;
+	end loop;
+end loop;
+end process;
+
+process(lv3)
+begin
+for i in 0 to 31 loop
+	for j in 0 to 7 loop
+		if i mod 2=0 then
+			lv4(2*j,i/2)<=lv3(j,i);
+		else
+			lv4(2*j+1,i/2)<=lv3(j,i);
+		end if;
+		end loop;
+end loop;
+end process;
+
+process(lv4)
+begin
+for i in 0 to 15 loop
+	for j in 0 to 15 loop
+		if i mod 2=0 then
+			lv5(2*j,i/2)<=lv4(j,i);
+		else
+			lv5(2*j+1,i/2)<=lv4(j,i);
+		end if;
+		end loop;
+end loop;
+end process;
+
+process(lv5)
+begin
+for i in 0 to 7 loop
+	for j in 0 to 31 loop
+		if i mod 2=0 then
+			lv6(2*j,i/2)<=lv5(j,i);
+		else
+			lv6(2*j+1,i/2)<=lv5(j,i);
+		end if;
+		end loop;
+end loop;
+end process;
+
+
+process(lv6)
+begin
+for i in 0 to 3 loop
+	for j in 0 to 63 loop
+		if i mod 2=0 then
+			lv7(2*j,i/2)<=lv6(j,i);
+		else
+			lv7(2*j+1,i/2)<=lv6(j,i);
+		end if;
+		end loop;
+end loop;
+end process;
+
+process(lv7)
+begin
+for i in 0 to 1 loop
+	for j in 0 to 127 loop
+		coefs_outcomp(i+2*j)<=lv7(j,i);
+
+		end loop;
+end loop;
+end process;
+
+end Behavioral;
