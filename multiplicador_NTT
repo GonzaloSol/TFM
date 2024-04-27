@@ -1,0 +1,24 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+use IEEE.NUMERIC_STD.ALL;
+library work;
+use work.prueba_comp.all;
+
+entity multiplicador_NTT is
+Port (entradas_mult: in entradas_comp;
+entradas_mult2: in entradas_comp;
+salidas_mult: out entradas_comp);
+end multiplicador_NTT;
+
+architecture Behavioral of multiplicador_NTT is
+component barrett_1
+Port (A, B: in STD_LOGIC_VECTOR(22 downto 0); C: out STD_LOGIC_VECTOR(22 downto 0)); 
+end component;
+
+begin
+as:for i in 0 to 255 generate
+B1: barrett_1 port map(entradas_mult(i),entradas_mult2(i),salidas_mult(i));
+end generate as;
+
+end Behavioral;
