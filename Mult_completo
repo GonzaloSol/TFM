@@ -1,0 +1,43 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+use IEEE.NUMERIC_STD.ALL;
+library work;
+use work.prueba_comp.all;
+
+
+entity mult_completo is
+    Port ( entrada_1 : in  entradas_comp;
+           entrada_2 : in  entradas_comp;
+           salida : out  entradas_comp);
+end mult_completo;
+
+architecture Behavioral of mult_completo is
+component INTT
+Port (V_entrada: in entradas_comp; V_salida: out entradas_comp);
+end component;
+
+component NTT_completa
+Port (V_entrada: in entradas_comp; V_salida: out entradas_comp);
+end component;
+
+component multiplicador_NTT
+Port(entradas_mult, entradas_mult2: in entradas_comp; salidas_mult: out entradas_comp);
+end component;
+
+signal aux1: entradas_comp;
+signal aux2: entradas_comp;
+signal aux3: entradas_comp;
+
+
+begin
+N1: component NTT_completa port map(entrada_1,aux1);
+N2: component NTT_completa port map(entrada_2,aux2);
+M1: component multiplicador_NTT  port map(entrada_1,aux2,aux3);
+I1: component INTT  port map(aux2,salida);
+
+
+
+
+
+end Behavioral;
