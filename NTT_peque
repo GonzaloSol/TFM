@@ -1,0 +1,63 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+library work;
+use work.prueba.all;
+
+entity NTT_peque_barrett is
+Port(V_entradab: in entradas;
+V_salidab: out salidas);
+end NTT_peque_barrett;
+
+architecture Behavioral of NTT_peque_barrett is
+component CT_barrett
+Port (I1, I2, TW: in STD_LOGIC_VECTOR(22 downto 0); O1,O2: out STD_LOGIC_VECTOR(22 downto 0)); 
+end component;
+type ROM_8x4 is array (0 to 3, 0 to 7) of std_logic_vector(22 downto 0);
+constant ROM_content : ROM_8x4 := (
+    (std_logic_vector(to_unsigned(1, 23)), others => (others => '0')), -- Fila 0
+    (std_logic_vector(to_unsigned(1, 23)), std_logic_vector(to_unsigned(3572223, 23)), others => (others => '0')), -- Fila 1
+    (std_logic_vector(to_unsigned(1, 23)), std_logic_vector(to_unsigned(3572223, 23)), std_logic_vector(to_unsigned(8380416, 23)), std_logic_vector(to_unsigned(4808194, 23)), others => (others => '0')), -- Fila 2	
+    (std_logic_vector(to_unsigned(1, 23)), std_logic_vector(to_unsigned(2883726, 23)), std_logic_vector(to_unsigned(4614810, 23)), std_logic_vector(to_unsigned(5178987, 23)),
+	  std_logic_vector(to_unsigned(4808194, 23)), std_logic_vector(to_unsigned(5178923, 23)), std_logic_vector(to_unsigned(4618904, 23)), std_logic_vector(to_unsigned(3145678, 23))) -- Fila 3		
+);
+component separador
+Port (coefs_in: in entradas; coefs_out: out salidas); 
+end component;
+	 type nivel_0 is array (0 to 15) of std_logic_vector(22 downto 0);
+    type nivel_1 is array (0 to 7, 0 to 1) of std_logic_vector(22 downto 0);
+	 type nivel_2 is array (0 to 3, 0 to 3) of std_logic_vector(22 downto 0);
+    type nivel_3 is array (0 to 1, 0 to 7) of std_logic_vector(22 downto 0);
+	     -- Declaración de las señales de los arrays
+	 signal lv0: salidas;
+--	 signal lv01: nivel_0;
+    signal lv1: nivel_1;
+    signal lv2: nivel_2;
+    signal lv3: nivel_3;
+
+begin
+S: component separador port map (V_entradab,lv0);
+
+--process (lv0)
+--begin
+--    for i in 0 to 15 loop
+--        lv01(i) <= lv0(i);
+--    end loop;
+--end process;
+as1: for l in 0 to 7 generate
+B1: component CT_barrett port map(lv0(2*l),lv0(2*l+1),ROM_content(0,0),lv1(l,0),lv1(l,1));
+end generate as1;
+as2: for l in 0 to 3 generate
+as22: for i in 0 to 1 generate
+B2: component CT_barrett port map(lv1(2*l,i),lv1(2*l+1,i),ROM_content(1,i),lv2(l,i),lv2(l,i+2));
+end generate as22;
+end generate as2;
+as3: for l in 0 to 1 generate
+as33: for i in 0 to 3 generate
+B3: component CT_barrett port map(lv2(2*l,i),lv2(2*l+1,i),ROM_content(2,i),lv3(l,i),lv3(l,i+4));
+end generate as33;
+end generate as3;
+as4: for i in 0 to 7 generate
+B4: component CT_barrett port map(lv3(0,i),lv3(1,i),ROM_content(3,i),V_salidab(i),V_salidab(i+8));
+end generate as4;
+end Behavioral;
