@@ -33,8 +33,8 @@ signal aux3: entradas_comp;
 begin
 N1: component NTT_completa port map(entrada_1,aux1);
 N2: component NTT_completa port map(entrada_2,aux2);
-M1: component multiplicador_NTT  port map(entrada_1,aux2,aux3);
-I1: component INTT  port map(aux2,salida);
+M1: component multiplicador_NTT  port map(aux1,aux2,aux3);
+I1: component INTT  port map(aux3,salida);
 
 
 
