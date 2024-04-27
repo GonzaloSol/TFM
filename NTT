@@ -1,0 +1,168 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+library work;
+use work.prueba_comp.all;
+
+entity NTT_completa is
+Port(V_entrada: in entradas_comp;
+V_salida: out entradas_comp);
+end NTT_completa;
+architecture Behavioral of NTT_completa is
+component CT_barrett
+Port (I1, I2, TW: in STD_LOGIC_VECTOR(22 downto 0); O1,O2: out STD_LOGIC_VECTOR(22 downto 0)); 
+end component;
+type ROM_128x8 is array (0 to 7, 0 to 127) of std_logic_vector(22 downto 0);
+
+constant ROM_content : ROM_128x8 := (
+    (std_logic_vector(to_unsigned(1, 23)), others => (others => '0')), -- Fila 0
+    
+	 (std_logic_vector(to_unsigned(1, 23)), std_logic_vector(to_unsigned(3572223, 23)), others => (others => '0')), -- Fila 1
+	 
+	 (std_logic_vector(to_unsigned(1, 23)), std_logic_vector(to_unsigned(3572223, 23)), std_logic_vector(to_unsigned(8380416, 23)), std_logic_vector(to_unsigned(4808194, 23)), others => (others => '0')), -- Fila 2	 
+	 
+	 (std_logic_vector(to_unsigned(1, 23)), std_logic_vector(to_unsigned(2883726, 23)), std_logic_vector(to_unsigned(4614810, 23)), std_logic_vector(to_unsigned(5178987, 23)),
+	 std_logic_vector(to_unsigned(4808194, 23)), std_logic_vector(to_unsigned(5178923, 23)), std_logic_vector(to_unsigned(4618904, 23)), std_logic_vector(to_unsigned(3145678, 23)), others => (others => '0')), -- Fila 3
+	 
+	 (std_logic_vector(to_unsigned(1, 23)), std_logic_vector(to_unsigned(557458, 23)), std_logic_vector(to_unsigned(5178987, 23)), std_logic_vector(to_unsigned(5698129, 23)),
+	 std_logic_vector(to_unsigned(4618904, 23)), std_logic_vector(to_unsigned(3764867, 23)), std_logic_vector(to_unsigned(5496691, 23)), std_logic_vector(to_unsigned(601683, 23)),
+	 std_logic_vector(to_unsigned(3572223, 23)), std_logic_vector(to_unsigned(1221177, 23)), std_logic_vector(to_unsigned(5234739, 23)), std_logic_vector(to_unsigned(2129892, 23)),
+	 std_logic_vector(to_unsigned(4614810, 23)), std_logic_vector(to_unsigned(1005239, 23)), std_logic_vector(to_unsigned(5178923, 23)), std_logic_vector(to_unsigned(3542485, 23)), others => (others => '0')), -- Fila 4
+	 
+	 (std_logic_vector(to_unsigned(1, 23)), std_logic_vector(to_unsigned(434125, 23)), std_logic_vector(to_unsigned(5698129, 23)), std_logic_vector(to_unsigned(2283733, 23)),
+	 std_logic_vector(to_unsigned(5496691, 23)), std_logic_vector(to_unsigned(2663378, 23)), std_logic_vector(to_unsigned(1221177, 23)), std_logic_vector(to_unsigned(6666122, 23)),
+	 std_logic_vector(to_unsigned(4614810, 23)), std_logic_vector(to_unsigned(7044481, 23)), std_logic_vector(to_unsigned(3542485, 23)), std_logic_vector(to_unsigned(7737789, 23)),
+	 std_logic_vector(to_unsigned(3201430, 23)), std_logic_vector(to_unsigned(4063053, 23)), std_logic_vector(to_unsigned(4615550, 23)), std_logic_vector(to_unsigned(1460718, 23)),
+	 std_logic_vector(to_unsigned(4808194, 23)), std_logic_vector(to_unsigned(4855975, 23)), std_logic_vector(to_unsigned(6250525, 23)), std_logic_vector(to_unsigned(5564778, 23)),
+	 std_logic_vector(to_unsigned(3201494, 23)), std_logic_vector(to_unsigned(6705802, 23)), std_logic_vector(to_unsigned(557458, 23)), std_logic_vector(to_unsigned(5152541, 23)),
+	 std_logic_vector(to_unsigned(4618904, 23)), std_logic_vector(to_unsigned(7703827, 23)), std_logic_vector(to_unsigned(601683, 23)), std_logic_vector(to_unsigned(4795319, 23)),
+	 std_logic_vector(to_unsigned(5234739, 23)), std_logic_vector(to_unsigned(5010068, 23)), std_logic_vector(to_unsigned(1005239, 23)), std_logic_vector(to_unsigned(5926434, 23)), others => (others => '0')), -- Fila 5
+	 
+	 (std_logic_vector(to_unsigned(1, 23)), std_logic_vector(to_unsigned(394148, 23)), std_logic_vector(to_unsigned(4855975, 23)), std_logic_vector(to_unsigned(2917338, 23)),
+	 std_logic_vector(to_unsigned(2682288, 23)), std_logic_vector(to_unsigned(3704823, 23)), std_logic_vector(to_unsigned(2815639, 23)), std_logic_vector(to_unsigned(1759347, 23)),
+	 std_logic_vector(to_unsigned(5496691, 23)), std_logic_vector(to_unsigned(4361428, 23)), std_logic_vector(to_unsigned(6705802, 23)), std_logic_vector(to_unsigned(3870317, 23)),
+	 std_logic_vector(to_unsigned(7159240, 23)), std_logic_vector(to_unsigned(4778199, 23)), std_logic_vector(to_unsigned(3227876, 23)), std_logic_vector(to_unsigned(4623627, 23)),
+	 std_logic_vector(to_unsigned(4614810, 23)), std_logic_vector(to_unsigned(7284949, 23)), std_logic_vector(to_unsigned(7703827, 23)), std_logic_vector(to_unsigned(5034454, 23)),
+	 std_logic_vector(to_unsigned(4837932, 23)), std_logic_vector(to_unsigned(6279007, 23)), std_logic_vector(to_unsigned(3585098, 23)), std_logic_vector(to_unsigned(3574466, 23)),
+	 std_logic_vector(to_unsigned(3201430, 23)), std_logic_vector(to_unsigned(6224367, 23)), std_logic_vector(to_unsigned(5010068, 23)), std_logic_vector(to_unsigned(5483103, 23)),
+	 std_logic_vector(to_unsigned(3764867, 23)), std_logic_vector(to_unsigned(2740543, 23)), std_logic_vector(to_unsigned(2453983, 23)), std_logic_vector(to_unsigned(6663429, 23)),
+	 std_logic_vector(to_unsigned(4808194, 23)), std_logic_vector(to_unsigned(928749, 23)), std_logic_vector(to_unsigned(7946292, 23)), std_logic_vector(to_unsigned(1853806, 23)),
+	 std_logic_vector(to_unsigned(2129892, 23)), std_logic_vector(to_unsigned(1159875, 23)), std_logic_vector(to_unsigned(2283733, 23)), std_logic_vector(to_unsigned(4965348, 23)),
+	 std_logic_vector(to_unsigned(3201494, 23)), std_logic_vector(to_unsigned(6308588, 23)), std_logic_vector(to_unsigned(5717039, 23)), std_logic_vector(to_unsigned(7823561, 23)),
+	 std_logic_vector(to_unsigned(7822959, 23)), std_logic_vector(to_unsigned(5197539, 23)), std_logic_vector(to_unsigned(6666122, 23)), std_logic_vector(to_unsigned(1935799, 23)),
+	 std_logic_vector(to_unsigned(4618904, 23)), std_logic_vector(to_unsigned(3506380, 23)), std_logic_vector(to_unsigned(1335936, 23)), std_logic_vector(to_unsigned(6522001, 23)),
+	 std_logic_vector(to_unsigned(7778734, 23)), std_logic_vector(to_unsigned(5269599, 23)), std_logic_vector(to_unsigned(7737789, 23)), std_logic_vector(to_unsigned(7562881, 23)),
+	 std_logic_vector(to_unsigned(5234739, 23)), std_logic_vector(to_unsigned(3241972, 23)), std_logic_vector(to_unsigned(4317364, 23)), std_logic_vector(to_unsigned(3192354, 23)),
+	 std_logic_vector(to_unsigned(7375178, 23)), std_logic_vector(to_unsigned(4793971, 23)), std_logic_vector(to_unsigned(1460718, 23)), std_logic_vector(to_unsigned(4430364, 23)), others => (others => '0')), -- Fila 6
+	 
+	 (std_logic_vector(to_unsigned(1, 23)), std_logic_vector(to_unsigned(169688, 23)), std_logic_vector(to_unsigned(7284949, 23)), std_logic_vector(to_unsigned(6635910, 23)),
+	 std_logic_vector(to_unsigned(7946292, 23)), std_logic_vector(to_unsigned(6442847, 23)), std_logic_vector(to_unsigned(6522001, 23)), std_logic_vector(to_unsigned(4197502, 23)),
+	 std_logic_vector(to_unsigned(5698129, 23)), std_logic_vector(to_unsigned(5121960, 23)), std_logic_vector(to_unsigned(2101410, 23)), std_logic_vector(to_unsigned(5697147, 23)),
+	 std_logic_vector(to_unsigned(6096684, 23)), std_logic_vector(to_unsigned(5157610, 23)), std_logic_vector(to_unsigned(817536, 23)), std_logic_vector(to_unsigned(5006167, 23)),
+	 std_logic_vector(to_unsigned(5496691, 23)), std_logic_vector(to_unsigned(7231559, 23)), std_logic_vector(to_unsigned(6224367, 23)), std_logic_vector(to_unsigned(8052569, 23)),
+	 std_logic_vector(to_unsigned(5717039, 23)), std_logic_vector(to_unsigned(4222329, 23)), std_logic_vector(to_unsigned(3192354, 23)), std_logic_vector(to_unsigned(2391089, 23)),
+	 std_logic_vector(to_unsigned(1221177, 23)), std_logic_vector(to_unsigned(4892034, 23)), std_logic_vector(to_unsigned(5639874, 23)), std_logic_vector(to_unsigned(459163, 23)),
+	 std_logic_vector(to_unsigned(1714295, 23)), std_logic_vector(to_unsigned(2635473, 23)), std_logic_vector(to_unsigned(3950053, 23)), std_logic_vector(to_unsigned(2461387, 23)),
+	 std_logic_vector(to_unsigned(4614810, 23)), std_logic_vector(to_unsigned(3334383, 23)), std_logic_vector(to_unsigned(928749, 23)), std_logic_vector(to_unsigned(3818627, 23)),
+	 std_logic_vector(to_unsigned(1335936, 23)), std_logic_vector(to_unsigned(2028118, 23)), std_logic_vector(to_unsigned(5463079, 23)), std_logic_vector(to_unsigned(2362063, 23)),
+	 std_logic_vector(to_unsigned(3542485, 23)), std_logic_vector(to_unsigned(6644104, 23)), std_logic_vector(to_unsigned(7220542, 23)), std_logic_vector(to_unsigned(5604662, 23)),
+	 std_logic_vector(to_unsigned(642628, 23)), std_logic_vector(to_unsigned(274060, 23)), std_logic_vector(to_unsigned(1759347, 23)), std_logic_vector(to_unsigned(4478945, 23)),
+	 std_logic_vector(to_unsigned(3201430, 23)), std_logic_vector(to_unsigned(482649, 23)), std_logic_vector(to_unsigned(6308588, 23)), std_logic_vector(to_unsigned(2354215, 23)),
+	 std_logic_vector(to_unsigned(4317364, 23)), std_logic_vector(to_unsigned(5569126, 23)), std_logic_vector(to_unsigned(4510100, 23)), std_logic_vector(to_unsigned(1787943, 23)),
+	 std_logic_vector(to_unsigned(4615550, 23)), std_logic_vector(to_unsigned(3197248, 23)), std_logic_vector(to_unsigned(3182878, 23)), std_logic_vector(to_unsigned(3467665, 23)),
+	 std_logic_vector(to_unsigned(6919699, 23)), std_logic_vector(to_unsigned(1277625, 23)), std_logic_vector(to_unsigned(4623627, 23)), std_logic_vector(to_unsigned(7759253, 23)),
+	 std_logic_vector(to_unsigned(4808194, 23)), std_logic_vector(to_unsigned(565603, 23)), std_logic_vector(to_unsigned(3506380, 23)), std_logic_vector(to_unsigned(6143691, 23)),
+	 std_logic_vector(to_unsigned(3524442, 23)), std_logic_vector(to_unsigned(3815725, 23)), std_logic_vector(to_unsigned(3345963, 23)), std_logic_vector(to_unsigned(4898211, 23)),
+	 std_logic_vector(to_unsigned(6250525, 23)), std_logic_vector(to_unsigned(5130263, 23)), std_logic_vector(to_unsigned(3110818, 23)), std_logic_vector(to_unsigned(2778788, 23)),
+	 std_logic_vector(to_unsigned(2815639, 23)), std_logic_vector(to_unsigned(4197045, 23)), std_logic_vector(to_unsigned(3574466, 23)), std_logic_vector(to_unsigned(2925816, 23)),
+	 std_logic_vector(to_unsigned(3201494, 23)), std_logic_vector(to_unsigned(2962264, 23)), std_logic_vector(to_unsigned(3241972, 23)), std_logic_vector(to_unsigned(8031605, 23)),
+	 std_logic_vector(to_unsigned(1674615, 23)), std_logic_vector(to_unsigned(7270901, 23)), std_logic_vector(to_unsigned(2897314, 23)), std_logic_vector(to_unsigned(2254727, 23)),
+	 std_logic_vector(to_unsigned(557458, 23)), std_logic_vector(to_unsigned(4166425, 23)), std_logic_vector(to_unsigned(3586446, 23)), std_logic_vector(to_unsigned(7727142, 23)),
+	 std_logic_vector(to_unsigned(3227876, 23)), std_logic_vector(to_unsigned(4528402, 23)), std_logic_vector(to_unsigned(6663429, 23)), std_logic_vector(to_unsigned(1317678, 23)),
+	 std_logic_vector(to_unsigned(4618904, 23)), std_logic_vector(to_unsigned(2462444, 23)), std_logic_vector(to_unsigned(7986269, 23)), std_logic_vector(to_unsigned(1922253, 23)),
+	 std_logic_vector(to_unsigned(676590, 23)), std_logic_vector(to_unsigned(5871437, 23)), std_logic_vector(to_unsigned(6526611, 23)), std_logic_vector(to_unsigned(7080401, 23)),
+	 std_logic_vector(to_unsigned(601683, 23)), std_logic_vector(to_unsigned(8145010, 23)), std_logic_vector(to_unsigned(3704823, 23)), std_logic_vector(to_unsigned(7023969, 23)),
+	 std_logic_vector(to_unsigned(3585098, 23)), std_logic_vector(to_unsigned(5258977, 23)), std_logic_vector(to_unsigned(4965348, 23)), std_logic_vector(to_unsigned(1226661, 23)),
+	 std_logic_vector(to_unsigned(5234739, 23)), std_logic_vector(to_unsigned(6852351, 23)), std_logic_vector(to_unsigned(4018989, 23)), std_logic_vector(to_unsigned(1011223, 23)),
+	 std_logic_vector(to_unsigned(3370349, 23)), std_logic_vector(to_unsigned(2983781, 23)), std_logic_vector(to_unsigned(556856, 23)), std_logic_vector(to_unsigned(2579253, 23)),
+	 std_logic_vector(to_unsigned(1005239, 23)), std_logic_vector(to_unsigned(1987814, 23)), std_logic_vector(to_unsigned(4778199, 23)), std_logic_vector(to_unsigned(6067579, 23)),
+	 std_logic_vector(to_unsigned(2453983, 23)), std_logic_vector(to_unsigned(5307408, 23)), std_logic_vector(to_unsigned(1935799, 23)), std_logic_vector(to_unsigned(3035980, 23)), others => (others => '0'))
+	 	 
+	 );
+
+
+
+
+
+component separadorcomp
+Port (coefs_incomp: in entradas_comp; coefs_outcomp: out entradas_comp); 
+end component;
+	 type nivel_0 is array (0 to 255) of std_logic_vector(22 downto 0);
+    type nivel_1 is array (0 to 127, 0 to 1) of std_logic_vector(22 downto 0);
+	 type nivel_2 is array (0 to 63, 0 to 3) of std_logic_vector(22 downto 0);
+    type nivel_3 is array (0 to 31, 0 to 7) of std_logic_vector(22 downto 0);
+	 type nivel_4 is array (0 to 15, 0 to 15) of std_logic_vector(22 downto 0);
+	 type nivel_5 is array (0 to 7, 0 to 31) of std_logic_vector(22 downto 0);
+	 type nivel_6 is array (0 to 3, 0 to 63) of std_logic_vector(22 downto 0);
+	 type nivel_7 is array (0 to 1, 0 to 127) of std_logic_vector(22 downto 0);
+	     -- Declaración de las señales de los arrays
+	 signal lv0: entradas_comp;
+    signal lv1: nivel_1;
+    signal lv2: nivel_2;
+    signal lv3: nivel_3;
+	 signal lv4: nivel_4;
+	 signal lv5: nivel_5;
+	 signal lv6: nivel_6;
+	 signal lv7: nivel_7;
+
+begin
+S: component separadorcomp port map (V_entrada,lv0);
+
+
+as1: for l in 0 to 127 generate
+B1: component CT_barrett port map(lv0(2*l),lv0(2*l+1),ROM_content(0,0),lv1(l,0),lv1(l,1));
+end generate as1;
+
+as2: for l in 0 to 63 generate
+as22: for i in 0 to 1 generate
+B2: component CT_barrett port map(lv1(2*l,i),lv1(2*l+1,i),ROM_content(1,i),lv2(l,i),lv2(l,i+2));
+end generate as22;
+end generate as2;
+
+as3: for l in 0 to 31 generate
+as33: for i in 0 to 3 generate
+B3: component CT_barrett port map(lv2(2*l,i),lv2(2*l+1,i),ROM_content(2,i),lv3(l,i),lv3(l,i+4));
+end generate as33;
+end generate as3;
+
+as4: for l in 0 to 15 generate
+as44: for i in 0 to 7 generate
+B4: component CT_barrett port map(lv3(2*l,i),lv3(2*l+1,i),ROM_content(3,i),lv4(l,i),lv4(l,i+8));
+end generate as44;
+end generate as4;
+
+as5: for l in 0 to 7 generate
+as55: for i in 0 to 15 generate
+B5: component CT_barrett port map(lv4(2*l,i),lv4(2*l+1,i),ROM_content(4,i),lv5(l,i),lv5(l,i+16));
+end generate as55;
+end generate as5;
+
+as6: for l in 0 to 3 generate
+as66: for i in 0 to 31 generate
+B6: component CT_barrett port map(lv5(2*l,i),lv5(2*l+1,i),ROM_content(5,i),lv6(l,i),lv6(l,i+32));
+end generate as66;
+end generate as6;
+
+as7: for l in 0 to 1 generate
+as77: for i in 0 to 63 generate
+B7: component CT_barrett port map(lv6(2*l,i),lv6(2*l+1,i),ROM_content(6,i),lv7(l,i),lv7(l,i+64));
+end generate as77;
+end generate as7;
+
+
+
+as8: for i in 0 to 127 generate
+B8: component CT_barrett port map(lv7(0,i),lv7(1,i),ROM_content(7,i),V_salida(i),V_salida(i+128));
+end generate as8;
+
+end Behavioral;
